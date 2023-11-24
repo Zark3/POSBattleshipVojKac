@@ -3,4 +3,5 @@ project(POSSemestralka C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(POSSemestralka main.c)
+add_executable(POSSemestralka main.c
+        grid.c)
