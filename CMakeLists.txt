@@ -4,4 +4,7 @@ project(POSSemestralka C)
 set(CMAKE_C_STANDARD 11)
 
 add_executable(POSSemestralka main.c
-        grid.c)
+        grid.c
+        grid.h
+        player.c
+        grid.h)
