@@ -1,3 +1,3 @@
-C:/Users/MITAJA/OneDrive/Repositories/POSSemestralka/cmake-build-debug/CMakeFiles/POSSemestralka.dir
-C:/Users/MITAJA/OneDrive/Repositories/POSSemestralka/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/MITAJA/OneDrive/Repositories/POSSemestralka/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/tmp/tmp.QEF2mkgKEA/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/tmp/tmp.QEF2mkgKEA/cmake-build-debug/CMakeFiles/edit_cache.dir
+/tmp/tmp.QEF2mkgKEA/cmake-build-debug/CMakeFiles/POSBattleshipVojKac.dir
