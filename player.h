@@ -12,4 +12,5 @@ typedef struct player {
 void initPlayer(PLAYER * player);
 int attack(PLAYER * att, PLAYER * def, short x, short y);
 
+
 #endif //POSSEMESTRALKA_PLAYER_H
