@@ -1,153 +1,147 @@
-#include "main.h"
+#include <stdio.h>
+#include <stdbool.h>
+#include <curses.h>
+#include <stdlib.h>
+#include <string.h>
 
-
-void userInput(DIR * direction1, SHIP ship1, int *x, int *y) {
-    int result = 1, help;
-
-    char all[BUFFSIZE], first = 0, second = 0;
-    //char first = 0;
-    //char second = 0;
-
-    switch (ship1) {
-        case carrier:
-            printf("Time for placing your Carrier\n");
-            break;
-        case battleship:
-            printf("Time for placing your Battleship\n");
-            break;
-        case cruiser:
-            printf("Time for placing your Cruiser\n");
-            break;
-        case destroyer:
-            printf("Time for placing your Destroyer\n");
-            break;
-        case patrol:
-            printf("Time for placing your Patrol boat\n");
-            break;
-        default:
-            break;
-    }
-    while (result != 0) {
-        printf("Write coordinates of square you want to place your ship. Like A5, F7,...\n");
-        while (help != '\n') {
-            //clearing stdin buffer
-            help = getchar();
-        }
-        fgets(all, 4,stdin);
-        for (int i = 0; i < BUFFSIZE; ++i) {
-            if (all[i] == '\n'){
-                all[i] = '\0';
-            }
-        }
-        printf("You wrote %s\n", all);
-        first = all[0];
-        printf("First is %c\n", first);
-        printf("First is %d\n", first);
-        second = all[1];
-        printf("Second is %c\n", second);
-        printf("Second is %d\n", second);
-
-        if(((first >= 65 && first <= 74) || (first >= 97 && first <= 106)) && (second >= 48 && second <= 57)) {
-            if(first >= 65 && first <= 74) {
-                *y = first - 65;
-            } else {
-                *y = first - 97;
-            }
-            *x = atoi(&second);
-            result = 0;
-        }
-    }
-
-    result = 1;
-    memset(all,'\0', BUFFSIZE);
-    help = '\0';
-
-    printf("Write direction for ships placement. up, down, left, right\n");
-    while (result != 0) {
-        while (help != '\n') {
-            //clearing stdin buffer
-            help = getchar();
-        }
-        fgets(all, BUFFSIZE/2,stdin);
-        for (int i = 0; i < BUFFSIZE; ++i) {
-            if (all[i] == '\n'){
-                all[i] = '\0';
-            }
-        }
-        printf("%s was read\n", all);
-        if(strcmp(all, "up") == 0){
-            *direction1 = north;
-            result = 0;
-        } else if(strcmp(all, "down") == 0) {
-            *direction1 = south;
-            result = 0;
-        } else if(strcmp(all, "left") == 0) {
-            *direction1 = west;
-            result = 0;
-        } else if(strcmp(all, "right") == 0) {
-            *direction1 = east;
-            result = 0;
-        } else {
-            printf("Wrong direction of ship! Try again!\n");
-            result = 1;
-        }
-    }
-
-    memset(all,'\0', BUFFSIZE);
-    help = '\0';
-    while ((help = getchar()) != '\n') {
-        //clearing stdin buffer
-
-    }
-
-}
+#include "grid.h"
+#include "player.h"
 
 int main() {
-    PLAYER player1;
-    PLAYER player2;
 
-    initPlayer(&player1);
+    PLAYER player;
+    initPlayer(&player);
+
+    PLAYER player2;
     initPlayer(&player2);
 
-    printf("Welcome to Battleship!\nPrepare your fleet for fight by placing your ships on battleground\n");
+    signed int x = GRID_SIZE / 2;
+    signed int y = GRID_SIZE / 2;
+
+    int direction = north;
+    SHIP ships[] = {carrier, battleship, cruiser, destroyer, patrol};
+    int placedShips = 0;
+    int temp_grid[GRID_SIZE][GRID_SIZE];
+
+    printf("#### PHASE ONE: PLACE YOUR SHIPS !!!\n");
+    //loop for placing ships
+    while (placedShips != NUM_OF_SHIP_CLASSES) {
+
+        //copy grid, put ship on temperature grid and grid
+        memcpy(temp_grid, player.myGrid, GRID_SIZE * GRID_SIZE * sizeof(int));
+        showPreview(temp_grid, ships[placedShips], direction, (short )x, (short )y);
+        writeGrid(temp_grid[0], player2.myGrid[0]);
+
+        printf("Place the %s!\n", getShipString(ships[placedShips]));
+
+        switch (getchar()) {
+            case 'r':
+                printf("r===== %d\n", y - ships[placedShips] + 1);
+                switch((direction + 1) % 4){
+                    case north:
+                        printf("r===== %d\n", y - ships[placedShips] + 1);
+                        //TODO nejde limitovanie otacanaia na sever
+                        if ((y - ships[placedShips] + 1) <= -1)  {++direction; direction %= 4;}
+                        break;
+
+                    case east:
+                        printf("r===== %d\n", x + ships[placedShips] - 1);
+                        if ((x + ships[placedShips] - 1) < GRID_SIZE) {++direction; direction %= 4;}
+                        break;
+
+                    case south:
+                        printf("r===== %d\n", y + ships[placedShips] - 1);
+                        if ((y + ships[placedShips] - 1) < GRID_SIZE) {++direction; direction %= 4;}
+                        break;
+
+                    case west:
+                        printf("r===== %d\n", x - ships[placedShips] + 1);
+                        if ((x - ships[placedShips] + 1) <= -1) {++direction; direction %= 4;}
+                        break;
+                }
+                printf("direction: %s\n", getDirectionString(direction));
+                break;
+            case 'p':  //enter ship
+                if(!tryPutShipInGrid(player.myGrid, ships[placedShips], direction, (short)x, (short)y)){
+                    !tryPutShipInGrid(player2.myGrid, ships[placedShips], direction, (short)x, (short)y);
+                    printf("%s. placed!\n", getShipString(ships[placedShips]));
+                    placedShips++;
+                    direction = north;
+                    x = GRID_SIZE / 2;
+                    y = GRID_SIZE / 2;
+                }
+                break;
+            case 'w':  //up
+                y--;
+                printf("x: %d, y:%d\n", x, y);
+                break;
+            case 's':  //down
+                y++;
+                printf("x: %d, y:%d\n", x, y);
+                break;
+            case 'a':  //left
+                x--;
+                printf("x: %d, y:%d\n", x, y);
+                break;
+            case 'd':  //right
+                x++;
+                printf("x: %d, y:%d\n", x, y);
+                break;
+        }
+
+        limitCoordinates(ships[placedShips], direction, &x, &y);
 
 
-    SHIP ship1 = carrier;
+        //clear screen
+        system("clear");
+    }
 
-    while(player1.placedShips < 5) {
-        writeGrid(player1.myGrid[0], player2.myGrid[0]);
-        DIR * direction;
-        int x, y;
-        userInput(direction, ship1, &x, &y);
+    bool GameEnd = false;
+    y = GRID_SIZE / 2;
+    x = GRID_SIZE / 2;
+    while(1) {
+        //TODO update grids
 
-        if(!tryPutShipInGrid(&player1, ship1, *direction, x, y)){
-            printf("Placement of ship was a success\n");
-            ship1--;
-            continue;
+        //TODO check if your a winner
+
+        //TODO show if your on a turn
+
+        //TODO wait for your turn
+
+        //copy opposites players grid for target placement
+        memcpy(temp_grid, player2.myGrid, GRID_SIZE * GRID_SIZE * sizeof(int));
+        temp_grid[x][y] = target;
+        writeGrid(player.myGrid[0], temp_grid[0]);
+
+        //place a shot
+        switch (getchar()) {
+            case 'p':
+                attack(&player, &player2, (short)x, (short)y);
+                y = GRID_SIZE / 2;
+                x = GRID_SIZE / 2;
+                break;
+            case 'a':  //up
+                y--;
+                if (y < 0) y = 0;
+                printf("x: %d, y:%d\n", x, y);
+                break;
+            case 'd':  //down
+                y++;
+                if (y >= GRID_SIZE) y = GRID_SIZE - 1;
+                printf("x: %d, y:%d\n", x, y);
+                break;
+            case 'w':  //left
+                x--;
+                if (x < 0) x = 0;
+                printf("x: %d, y:%d\n", x, y);
+                break;
+            case
+            's':  //right
+                x++;
+                if (x >= GRID_SIZE) x = GRID_SIZE - 1;
+                printf("x: %d, y:%d\n", x, y);
+                break;
         }
     }
-
-    /*
-    while(player1.lives < 0 || player2.lives < 0){
-        writeGrid(player1.myGrid[0], player2.myGrid[0]);
-
-    }
-    */
-
-
-    //tryPutShipInGrid(&player2, battleship, south, 0, 0);
-    //tryPutShipInGrid(&player1, cruiser, east, 8, 7);
-    writeGrid(player1.myGrid[0], player2.myGrid[0]);
-/*
-    attack(&player1, &player2, 0 ,1);
-
-    writeGrid(player1.myGrid[0], player2.myGrid[0]);
-
-    attack(&player2, &player1, 6 ,2);
-
-    writeGrid(player1.myGrid[0], player2.myGrid[0]);
-*/
     return 0;
 }
-
-

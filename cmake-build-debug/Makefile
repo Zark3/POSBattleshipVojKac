@@ -67,10 +67,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /tmp/tmp.0bUF9sihCa
+CMAKE_SOURCE_DIR = /tmp/tmp.QEF2mkgKEA
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /tmp/tmp.0bUF9sihCa/cmake-build-debug
+CMAKE_BINARY_DIR = /tmp/tmp.QEF2mkgKEA/cmake-build-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -99,9 +99,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /tmp/tmp.0bUF9sihCa/cmake-build-debug/CMakeFiles /tmp/tmp.0bUF9sihCa/cmake-build-debug//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /tmp/tmp.QEF2mkgKEA/cmake-build-debug/CMakeFiles /tmp/tmp.QEF2mkgKEA/cmake-build-debug//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /tmp/tmp.0bUF9sihCa/cmake-build-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /tmp/tmp.QEF2mkgKEA/cmake-build-debug/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -130,17 +130,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named POSSemestralka
+# Target rules for targets named POSBattleshipVojKac
 
 # Build rule for target.
-POSSemestralka: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 POSSemestralka
-.PHONY : POSSemestralka
+POSBattleshipVojKac: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 POSBattleshipVojKac
+.PHONY : POSBattleshipVojKac
 
 # fast build rule for target.
-POSSemestralka/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/POSSemestralka.dir/build.make CMakeFiles/POSSemestralka.dir/build
-.PHONY : POSSemestralka/fast
+POSBattleshipVojKac/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/POSBattleshipVojKac.dir/build.make CMakeFiles/POSBattleshipVojKac.dir/build
+.PHONY : POSBattleshipVojKac/fast
 
 main.o: main.c.o
 
@@ -148,7 +148,7 @@ main.o: main.c.o
 
 # target to build an object file
 main.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/POSSemestralka.dir/build.make CMakeFiles/POSSemestralka.dir/main.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/POSBattleshipVojKac.dir/build.make CMakeFiles/POSBattleshipVojKac.dir/main.c.o
 .PHONY : main.c.o
 
 main.i: main.c.i
@@ -157,7 +157,7 @@ main.i: main.c.i
 
 # target to preprocess a source file
 main.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/POSSemestralka.dir/build.make CMakeFiles/POSSemestralka.dir/main.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/POSBattleshipVojKac.dir/build.make CMakeFiles/POSBattleshipVojKac.dir/main.c.i
 .PHONY : main.c.i
 
 main.s: main.c.s
@@ -166,7 +166,7 @@ main.s: main.c.s
 
 # target to generate assembly for a file
 main.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/POSSemestralka.dir/build.make CMakeFiles/POSSemestralka.dir/main.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/POSBattleshipVojKac.dir/build.make CMakeFiles/POSBattleshipVojKac.dir/main.c.s
 .PHONY : main.c.s
 
 # Help Target
@@ -177,7 +177,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... POSSemestralka"
+	@echo "... POSBattleshipVojKac"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
