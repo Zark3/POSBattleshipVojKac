@@ -77,6 +77,8 @@ void writeGrid(int * grid1, int * grid2){
         printf("%c|",line++);
         for (int j = 0; j < GRID_SIZE; ++j) {
             switch (*grid2++) {
+                case ship:
+
                 case sea:
                     printf("~");
                     break;
@@ -86,9 +88,7 @@ void writeGrid(int * grid1, int * grid2){
                 case hit:
                     printf("x");
                     break;
-                case ship:
-                    printf("~");
-                    break;
+
                 case target:
                     printf("@");
                     break;

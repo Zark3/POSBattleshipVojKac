@@ -23,3 +23,6 @@ int attack(PLAYER *att, PLAYER *def, short x, short y) {
     }
     return 4;
 }
+
+
+

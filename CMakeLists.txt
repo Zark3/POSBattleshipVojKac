@@ -8,6 +8,7 @@ add_executable(POSBattleshipVojKac main.c
         grid.c
         player.c
         player.h
+        server.c
 )
 
 target_link_libraries(POSBattleshipVojKac curses)

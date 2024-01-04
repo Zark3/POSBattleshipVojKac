@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
-#include <curses.h>
+#include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -8,7 +8,8 @@
 #include "player.h"
 
 int main() {
-
+    //initscr();
+    //keypad(stdscr, TRUE);
     PLAYER player;
     initPlayer(&player);
 
@@ -24,6 +25,7 @@ int main() {
     int temp_grid[GRID_SIZE][GRID_SIZE];
 
     printf("#### PHASE ONE: PLACE YOUR SHIPS !!!\n");
+
     //loop for placing ships
     while (placedShips != NUM_OF_SHIP_CLASSES) {
 
@@ -143,5 +145,6 @@ int main() {
                 break;
         }
     }
+    endwin();
     return 0;
 }

@@ -9,7 +9,7 @@
 					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.26"
+						"string" : "3.18"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -27,7 +27,7 @@
 					[
 						0
 					],
-					"name" : "POSSemestralka",
+					"name" : "POSBattleshipVojKac",
 					"targetIndexes" : 
 					[
 						0
@@ -38,9 +38,9 @@
 			[
 				{
 					"directoryIndex" : 0,
-					"id" : "POSSemestralka::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-POSSemestralka-Debug-ac4d3ddb4929fab648a4.json",
-					"name" : "POSSemestralka",
+					"id" : "POSBattleshipVojKac::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-POSBattleshipVojKac-Debug-ef495f1abd5e7f894bc3.json",
+					"name" : "POSBattleshipVojKac",
 					"projectIndex" : 0
 				}
 			]
@@ -49,12 +49,12 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "C:/Users/MITAJA/OneDrive/Repositories/POSSemestralka/cmake-build-debug",
-		"source" : "C:/Users/MITAJA/OneDrive/Repositories/POSSemestralka"
+		"build" : "C:/Users/MITAJA/OneDrive/Repositories/POSBattleshipVojKac/cmake-build-debug",
+		"source" : "C:/Users/MITAJA/OneDrive/Repositories/POSBattleshipVojKac"
 	},
 	"version" : 
 	{
 		"major" : 2,
-		"minor" : 5
+		"minor" : 6
 	}
 }
