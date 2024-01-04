@@ -1,1 +1,0 @@
-/usr/bin/cc -g CMakeFiles/POSBattleshipVojKac.dir/main.c.o CMakeFiles/POSBattleshipVojKac.dir/grid.c.o CMakeFiles/POSBattleshipVojKac.dir/player.c.o CMakeFiles/POSBattleshipVojKac.dir/server.c.o -o POSBattleshipVojKac  -lcurses 

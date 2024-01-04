@@ -1,3 +1,0 @@
-C:/Users/MITAJA/OneDrive/Repositories/POSBattleshipVojKac/cmake-build-debug/CMakeFiles/POSBattleshipVojKac.dir
-C:/Users/MITAJA/OneDrive/Repositories/POSBattleshipVojKac/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/MITAJA/OneDrive/Repositories/POSBattleshipVojKac/cmake-build-debug/CMakeFiles/rebuild_cache.dir
