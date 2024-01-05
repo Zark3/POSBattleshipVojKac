@@ -300,7 +300,7 @@ void * process_server_data(void* thread_data){
             pthread_mutex_lock(&data->mutex);
             data->gameEnd = TRUE;
             pthread_mutex_unlock(&data->mutex);
-            active_socket_write_end_message(data->my_socket);
+            //active_socket_write_end_message(data->my_socket);
         }
 
         data->serverTurn = FALSE;
@@ -421,6 +421,15 @@ void * process_client_data(void* thread_data){
         } else{
             //something went wrong
         }
+
+        //game over
+        if (data->player1->lives <= 0){
+            printf("Fleet of Player 1 has been destroyed! Game Over!\n");
+            pthread_mutex_lock(&data->mutex);
+            data->gameEnd = TRUE;
+            pthread_mutex_unlock(&data->mutex);
+            //active_socket_write_end_message(data->my_socket);
+        }
         data->clientTurn = FALSE;
 
         pthread_cond_signal(&data->player1Turn);
@@ -432,7 +441,7 @@ void * process_client_data(void* thread_data){
     }
 
     //continue with game in rounds
-    //game over
+
 
 
 
