@@ -36,7 +36,9 @@ struct thread_data{
     struct char_buffer * buffer;
 };
 
-int createConnection(char * address, short port, struct hostent * server, struct sockaddr_in * serv_addr) {
+int createConnection(char * address, short port) {
+    struct sockaddr_in serv_addr;
+    struct hostent* server;
 
     server = gethostbyname(address);
     if (server == NULL) {
@@ -45,17 +47,17 @@ int createConnection(char * address, short port, struct hostent * server, struct
     }
 
     //set server address to zero
-    memset(&serv_addr,0, sizeof (serv_addr));
+    memset((char*)&serv_addr,0, sizeof (serv_addr));
 
     //set IPv4 = AF_INET
-    serv_addr->sin_family = AF_INET;
+    serv_addr.sin_family = AF_INET;
 
     //set port
-    serv_addr->sin_port = port;
+    serv_addr.sin_port = htons(port);
 
     //set address
     //copy server address from server to serv_addr
-    memcpy((char*)&serv_addr->sin_addr.s_addr, (char*)server->h_addr, server->h_length);
+    memcpy((char*)&serv_addr.sin_addr.s_addr, (char*)server->h_addr, server->h_length);
 
     int sck_tcp;
     //create socket, default setting, IPv4
@@ -68,10 +70,11 @@ int createConnection(char * address, short port, struct hostent * server, struct
     //connect to server
     if (connect(sck_tcp, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) != 0) {
         perror("Connection to server failed");
+        fprintf(stderr, "Address: %s, Port: %d\n", address, port);
         return -1;
     }
 
-    return 0;
+    return sck_tcp;
 }
 
 int sendData(int sck_dscr,struct char_buffer * buffer) {
@@ -119,7 +122,7 @@ void thread_data_init(struct thread_data * data){
     struct sockaddr_in serv_addr;
 
     //socket descriptor
-    data->sck_tcp = createConnection(SERV_ADDR, PORT, server, &serv_addr);
+    //data->sck_tcp = createConnection(SERV_ADDR, PORT, server, &serv_addr);
     if (data->sck_tcp < 0) {
         perror("Connecting to server failed");
     }
@@ -395,21 +398,19 @@ void * play(void * gameData){
 }
 
 int main() {
-    //server info
-    struct hostent* server;
-
-    //server address
-    struct sockaddr_in serv_addr;
 
     //socket descriptor
     int sck_tcp;
-    sck_tcp = createConnection(SERV_ADDR, PORT, server, &serv_addr);
+    sck_tcp = createConnection(SERV_ADDR, PORT);
     if (sck_tcp < 0) {
         perror("Connecting to server failed");
+        return 2;
     }
 
     //thread data
     struct thread_data data;
+    CHAR_BUFFER buf;
+    data.buffer = &buf;
     thread_data_init(&data);
 
     pthread_t game;
