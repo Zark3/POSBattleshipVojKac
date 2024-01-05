@@ -42,6 +42,8 @@ int tryPutShipInGrid(int grid[][GRID_SIZE], SHIP ship, DIR direction, short x, s
 
 void showPreview(int  players_grid[][GRID_SIZE], SHIP ship, DIR dir, short x, short y);
 
+void getShipData(int x, int y, DIR direction, int data[11]);
+
 char * getDirectionString(DIR direction);
 
 char * getShipString(SHIP vessel);

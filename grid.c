@@ -226,6 +226,29 @@ void showPreview(int grid[][GRID_SIZE], SHIP vessel, DIR dir, short x, short y) 
     }
 }
 
+void getShipData(int x, int y, DIR direction, int data[10]) {
+
+    for (int i = 0; i < 10; ++i) {
+        switch (direction) {
+            case north:
+                data[i] = x;
+                data[++i] = y--;
+                break;
+            case east:
+                data[i] = x++;
+                data[++i] = y;
+                break;
+            case south:
+                data[i] = x;
+                data[++i] = y++;
+                break;
+            case west:
+                data[i] = x--;
+                data[++i] = y;
+                break;
+        }
+    }
+}
 char * getDirectionString(DIR direction){
     switch (direction) {
         case 0: return "north";
