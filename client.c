@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <ncurses.h>
 
 #include "pos_sockets/char_buffer.h"
 #include "grid.h"
@@ -25,7 +26,7 @@ struct thread_data{
 
     bool gameEnd;
     bool gameUpdate;
-    int roundCount;
+
 
     int sck_tcp;
 
@@ -70,7 +71,7 @@ int createConnection(char * address, short port) {
     //connect to server
     if (connect(sck_tcp, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) != 0) {
         perror("Connection to server failed");
-        fprintf(stderr, "Address: %s, Port: %d\n", address, port);
+        fprintf(stderr, "Address: %s, Port: %d\r\n", address, port);
         return -1;
     }
 
@@ -78,7 +79,7 @@ int createConnection(char * address, short port) {
 }
 
 int sendData(int sck_dscr,struct char_buffer * buffer) {
-    printf("Sending data: %s to %d socket\n", buffer->data, sck_dscr);
+    //printf("Sending data: %s to %d socket\r\n", buffer->data, sck_dscr);
     if (write(sck_dscr, buffer->data, buffer->size) < 0) {
         perror("Error writing to socket");
         return -2;
@@ -89,7 +90,7 @@ int sendData(int sck_dscr,struct char_buffer * buffer) {
 int receiveData(int sck_dscr, struct char_buffer * buffer) {
     char recData[150];
 
-    printf("Ready for data read\n");
+    //printf("Ready for data read\r\n");
 
     if(read(sck_dscr, recData, 150) < 0)
     {
@@ -99,7 +100,7 @@ int receiveData(int sck_dscr, struct char_buffer * buffer) {
 
     char_buffer_clear(buffer);
     char_buffer_append(buffer, recData, 150);
-    printf("Read data: %s\n",buffer->data);
+    //printf("Read data: %s\r\n",buffer->data);
 
     return 0;
 }
@@ -111,7 +112,7 @@ void thread_data_init(struct thread_data * data){
 
     data->gameEnd = false;
     data->gameUpdate = true;
-    data->roundCount = 1;
+
 
 
 
@@ -131,8 +132,8 @@ void thread_data_init(struct thread_data * data){
     for (int i = 0; i < 4; ++i) {
         data->sck_tcp = createConnection(SERV_ADDR, PORT);
         if (data->sck_tcp < 0) {
-            perror("Connecting to server failed\n");
-            perror("Trying again in 5s\n");
+            perror("Connecting to server failed\r\n");
+            perror("Trying again in 5s\r\n");
             sleep(5);
             continue;
         }
@@ -163,11 +164,11 @@ int sendEndMessage(int sck_dscr,struct char_buffer * buffer) {
 }
 
 void serializeAttack(int x, int y, struct char_buffer * buffer){
-     char_buffer_clear(buffer);
+    char_buffer_clear(buffer);
 
-     char serializedAttack[] = {(char)x,';', (char)y, ';'};
+    char serializedAttack[] = {(char)x,';', (char)y, ';'};
 
-     char_buffer_append(buffer, serializedAttack, 4);
+    char_buffer_append(buffer, serializedAttack, 4);
 }
 
 
@@ -203,19 +204,15 @@ void serializeShipPlacement(SHIP shipClass, int coordinates[], struct char_buffe
 }
 
 void deserializeGrid(struct char_buffer * buffer, int *grid) {
-    printf("Deserialized grid: ");
+    //printf("Deserialized grid: ");
     for(int i = 0; i < GRID_SIZE * GRID_SIZE; i++)
     {
         *grid++ = buffer->data[i];
-        printf("%d", buffer->data[i]);
+        //printf("%d", buffer->data[i]);
     }
-    printf("\n");
+    printf("\r\n");
 }
 
-int receiveGameGrid(int sck_descr, int grid[][GRID_SIZE]) {
-
-    return 0;
-}
 void * updateGameData(void * gameData) {
     struct thread_data * data = gameData;
 
@@ -223,10 +220,10 @@ void * updateGameData(void * gameData) {
         pthread_mutex_lock(&data->mutex);
 
         //while(data->gameUpdate) {
-            //wait for player to place target and send data, then receive upgraded grid from server
+        //wait for player to place target and send data, then receive upgraded grid from server
         pthread_cond_wait(&data->update, &data->mutex);
         //}
-        printf("Starting to update grids\n");
+        //printf("Starting to update grids\r\n");
         //get clients grid
         char_buffer_clear(data->buffer);
         char_buffer_append(data->buffer, "update", 7);
@@ -264,22 +261,22 @@ int determineWinner(int *gridClient, int *gridServer){
         printf("%d\n",gridServer[i]);
     }
 
-    printf("Client hp is %d\n", shipsClient);
-    printf("Server hp is %d\n", shipsServer);
+    //printf("Client hp is %d\r\n", shipsClient);
+    //printf("Server hp is %d\r\n", shipsServer);
 
 
     if (shipsServer == 0) {
-        printf("Fleet of enemy has been destroyed! Game Over!\n");
+        printf("Fleet of enemy has been destroyed! Game Over!\r\n");
 
         return clientWinner;
     }
 
     if (shipsClient == 0) {
-        printf("Your fleet has been destroyed! Game Over!!\n");
+        printf("Your fleet has been destroyed! Game Over!!\r\n");
         return serverWinner;
     }
 
-    else return 1;
+    else return none;
 }
 
 void * play(void * gameData){
@@ -293,7 +290,8 @@ void * play(void * gameData){
     int placedShips = 0;
     int temp_grid[GRID_SIZE][GRID_SIZE];
 
-    printf("#### PHASE ONE: PLACE YOUR SHIPS !!!\n");
+
+    printf("#### PHASE ONE: PLACE YOUR SHIPS !!!\r\n");
 
     //loop for placing ships
     while (placedShips != NUM_OF_SHIP_CLASSES) {
@@ -303,38 +301,38 @@ void * play(void * gameData){
         showPreview(temp_grid, ships[placedShips], direction, (short )x, (short )y);
         writeGrid(temp_grid[0], data->clientPlayer.myGrid[0]);
 
-        printf("Place the %s!\n", getShipString(ships[placedShips]));
+
+        printf("Place the %s!\r\n", getShipString(ships[placedShips]));
 
         switch (getchar()) {
             case 'r':
-                printf("r===== %d\n", y - ships[placedShips] + 1);
+               //printf("r===== %d\r\n", y - ships[placedShips] + 1);
                 switch((direction + 1) % 4){
                     case north:
-                        printf("r===== %d\n", y - ships[placedShips] + 1);
-                        //TODO nejde limitovanie otacanaia na sever
+                        //printf("r===== %d\r\n", y - ships[placedShips] + 1);
                         if ((y - ships[placedShips] + 1) <= -1)  {++direction; direction %= 4;}
                         break;
 
                     case east:
-                        printf("r===== %d\n", x + ships[placedShips] - 1);
+                        //printf("r===== %d\r\n", x + ships[placedShips] - 1);
                         if ((x + ships[placedShips] - 1) < GRID_SIZE) {++direction; direction %= 4;}
                         break;
 
                     case south:
-                        printf("r===== %d\n", y + ships[placedShips] - 1);
+                        //printf("r===== %d\r\n", y + ships[placedShips] - 1);
                         if ((y + ships[placedShips] - 1) < GRID_SIZE) {++direction; direction %= 4;}
                         break;
 
                     case west:
-                        printf("r===== %d\n", x - ships[placedShips] + 1);
+                        //printf("r===== %d\r\n", x - ships[placedShips] + 1);
                         if ((x - ships[placedShips] + 1) <= -1) {++direction; direction %= 4;}
                         break;
                 }
-                printf("direction: %s\n", getDirectionString(direction));
+                //printf("direction: %s\r\n", getDirectionString(direction));
                 break;
             case 'p':  //enter ship
                 if(!tryPutShipInGrid(data->clientPlayer.myGrid, ships[placedShips], direction, (short)x, (short)y)){
-                    printf("%s. placed!\n", getShipString(ships[placedShips]));
+                    //printf("%s. placed!\r\n", getShipString(ships[placedShips]));
 
 
                     //process ship placement and send do server
@@ -351,19 +349,19 @@ void * play(void * gameData){
                 break;
             case 'w':  //up
                 y--;
-                printf("x: %d, y:%d\n", x, y);
+                //printf("x: %d, y:%d\r\n", x, y);
                 break;
             case 's':  //down
                 y++;
-                printf("x: %d, y:%d\n", x, y);
+                //printf("x: %d, y:%d\r\n", x, y);
                 break;
             case 'a':  //left
                 x--;
-                printf("x: %d, y:%d\n", x, y);
+                //printf("x: %d, y:%d\r\n", x, y);
                 break;
             case 'd':  //right
                 x++;
-                printf("x: %d, y:%d\n", x, y);
+                //printf("x: %d, y:%d\r\n", x, y);
                 break;
         }
 
@@ -371,23 +369,26 @@ void * play(void * gameData){
 
 
         //clear screen
-        getchar();
-        //system("clear");
+        //getchar();
+        system("clear");
+        printf("#### PHASE ONE: PLACE YOUR SHIPS !!!\r\n");
     }
 
-
-    //TODO send done message and wait for server response
-    printf("Wait for another Player to place his ships!\n");
+    system("clear");
+    //send done message and wait for server response
+    writeGrid(data->clientPlayer.myGrid[0], data->serverPlayer.myGrid[0]);
+    printf("Wait for another Player to place his ships!\r\n");
     read(data->sck_tcp, data->buffer->data, 10);
-    printf("Received %s from server\n", data->buffer->data);
+    //printf("Received %s from server\r\n", data->buffer->data);
 
     while(strcmp(data->buffer->data, "start") != 0){
         read(data->sck_tcp, data->buffer->data, 10);
     }
 
-    printf("#### PHASE TWO: BATTLE !!!\n");
-
-    printf("Waiting for turn!\n");
+    system("clear");
+    printf("#### PHASE TWO: BATTLE !!!\r\n");
+    writeGrid(data->clientPlayer.myGrid[0], data->serverPlayer.myGrid[0]);
+    printf("Waiting for turn!\r\n");
     receiveData(data->sck_tcp, data->buffer);
 
     while(strcmp(data->buffer->data, "turn") !=0 ){
@@ -397,7 +398,7 @@ void * play(void * gameData){
 
     pthread_mutex_lock(&data->mutex);
     pthread_cond_signal(&data->update);
-    printf("Signaled update thread\n");
+    //printf("Signaled update thread\r\n");
 
     pthread_cond_wait(&data->play,&data->mutex);
     pthread_mutex_unlock(&data->mutex);
@@ -412,7 +413,7 @@ void * play(void * gameData){
     */
 
 
-    while (determineWinner(data->clientPlayer.myGrid[0], data->serverPlayer.myGrid[0])){
+    while (determineWinner(data->clientPlayer.myGrid[0], data->serverPlayer.myGrid[0]) == none){
         //TODO wait for your turn
         /*
         printf("Wait for another Player for his turn!\n");
@@ -423,7 +424,7 @@ void * play(void * gameData){
             read(data->sck_tcp, data->buffer->data, 10);
         }
         */
-        printf("Round %d! Your turn ! Choose tile to attack !\n", data->roundCount++);
+
 
         pthread_mutex_lock(&data->mutex);
 
@@ -433,12 +434,15 @@ void * play(void * gameData){
 
 
         while (true){
+            system("clear");
+            printf("#### PHASE TWO: BATTLE !!!\r\n");
             //copy opposites players grid for target placement
             memcpy(temp_grid, data->serverPlayer.myGrid, GRID_SIZE * GRID_SIZE * sizeof(int));
             temp_grid[x][y] = target;
             writeGrid(data->clientPlayer.myGrid[0], temp_grid[0]);
             //place a shot
-            printf("Place your shot!\n");
+
+            printf("Your turn! Choose tile to attack !\r\n");
             switch (getchar()) {
                 case 'p':
 
@@ -453,30 +457,30 @@ void * play(void * gameData){
                 case 'a':  //up
                     y--;
                     if (y < 0) y = 0;
-                    printf("x: %d, y:%d\n", x, y);
+                    //printf("x: %d, y:%d\r\n", x, y);
                     break;
                 case 'd':  //down
                     y++;
                     if (y >= GRID_SIZE) y = GRID_SIZE - 1;
-                    printf("x: %d, y:%d\n", x, y);
+                    //printf("x: %d, y:%d\r\n", x, y);
                     break;
                 case 'w':  //left
                     x--;
                     if (x < 0) x = 0;
-                    printf("x: %d, y:%d\n", x, y);
+                    //printf("x: %d, y:%d\r\n", x, y);
                     break;
                 case
                     's':  //right
                     x++;
                     if (x >= GRID_SIZE) x = GRID_SIZE - 1;
-                    printf("x: %d, y:%d\n", x, y);
+                    //printf("x: %d, y:%d\r\n", x, y);
                     break;
             }
         }
         end:
         pthread_mutex_unlock(&data->mutex);
 
-        printf("Waiting for turn!\n");
+        printf("Waiting for turn!\r\n");
         receiveData(data->sck_tcp, data->buffer);
 
         while(strcmp(data->buffer->data, "turn")!=0){
@@ -498,6 +502,10 @@ void * play(void * gameData){
 }
 
 int main() {
+
+    initscr();
+    noecho();
+    system("clear");
     /*
     //socket descriptor
     int sck_tcp;
@@ -529,6 +537,7 @@ int main() {
 
 
     thread_data_destroy(&data);
+    endwin();
 
     return 0;
 }
