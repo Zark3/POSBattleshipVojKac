@@ -52,6 +52,7 @@ _Bool active_socket_try_get_read_data(struct active_socket* self, struct char_bu
     _Bool result = false;
 
     if (pthread_mutex_trylock(&self->mutex_received_data) == 0) {
+        printf("Inside mutex lock in F try get data\n");
         result = linked_list_char_buffer_try_remove_first(&self->received_data, output);
         pthread_mutex_unlock(&self->mutex_received_data);
     }
