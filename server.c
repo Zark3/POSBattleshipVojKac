@@ -1,3 +1,7 @@
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <curses.h>
@@ -37,6 +41,7 @@ typedef struct thread_data {
 
 void thread_data_init(struct thread_data* data, short port, ACTIVE_SOCKET* my_socket) {
 
+
     initPlayer(data->player1);
     initPlayer(data->player2);
     data->roundCount = 1;
@@ -44,6 +49,8 @@ void thread_data_init(struct thread_data* data, short port, ACTIVE_SOCKET* my_so
 
     data->serverPlacedShips = FALSE;
     data->clientPlacedShips = FALSE;
+
+    data->serverTurn = TRUE;
 
 
     pthread_mutex_init(&data->mutex, NULL);
@@ -76,101 +83,30 @@ void waitForClientToJoin(void* thread_data) {
     PASSIVE_SOCKET p_socket;
     passive_socket_init(&p_socket);
     passive_socket_start_listening(&p_socket, data->port);
+    printf("Waiting for client to join\n");
     passive_socket_wait_for_client(&p_socket, data->my_socket);
     passive_socket_stop_listening(&p_socket);
     passive_socket_destroy(&p_socket);
 
     printf("Client connected!\n");
-    active_socket_start_reading(data->my_socket);
+    //active_socket_start_reading(data->my_socket);
 
 }
 
 void player1Turn(void * threadData, int x, int y){
-    struct thread_data * data = threadData;
-
-    //place a shot
-    switch (getchar()) {
-        case 'p':
-            attack(data->player1, data->player2, (short)x, (short)y);
-            y = GRID_SIZE / 2;
-            x = GRID_SIZE / 2;
-            break;
-        case 'a':  //up
-            y--;
-            if (y < 0) y = 0;
-            printf("x: %d, y:%d\n", x, y);
-            break;
-        case 'd':  //down
-            y++;
-            if (y >= GRID_SIZE) y = GRID_SIZE - 1;
-            printf("x: %d, y:%d\n", x, y);
-            break;
-        case 'w':  //left
-            x--;
-            if (x < 0) x = 0;
-            printf("x: %d, y:%d\n", x, y);
-            break;
-        case
-            's':  //right
-            x++;
-            if (x >= GRID_SIZE) x = GRID_SIZE - 1;
-            printf("x: %d, y:%d\n", x, y);
-            break;
-    }
-}
-/*
-void player2Turn(void * threadData, int x, int y){
-    struct thread_data * data = threadData;
-    bool end = false;
-    //place a shot
-    //TODO wrong char patch
-    while(TRUE){
-        switch (getchar()) {
-            case 'p':
-                attack(data->player2, data->player1, (short)x, (short)y);
-                y = GRID_SIZE / 2;
-                x = GRID_SIZE / 2;
-                end = TRUE;
-                break;
-            case 'a':  //up
-                y--;
-                if (y < 0) y = 0;
-                printf("x: %d, y:%d\n", x, y);
-                break;
-            case 'd':  //down
-                y++;
-                if (y >= GRID_SIZE) y = GRID_SIZE - 1;
-                printf("x: %d, y:%d\n", x, y);
-                break;
-            case 'w':  //left
-                x--;
-                if (x < 0) x = 0;
-                printf("x: %d, y:%d\n", x, y);
-                break;
-            case 's':  //right
-                x++;
-                if (x >= GRID_SIZE) x = GRID_SIZE - 1;
-                printf("x: %d, y:%d\n", x, y);
-                break;
-            default:
-                break;
-        }
-        if(end) break;
-    }
 
 }
-*/
 
-void fillBufferWithGrid(struct char_buffer* buf,int* grid){
-    char  SGrid[GRID_SIZE*GRID_SIZE+1];
-    int position;
+
+void fillBufferWithGrid(char* buf,int* grid){
+    //char  SGrid[GRID_SIZE*GRID_SIZE+1];
+    //int position;
     for (int i = 0; i < GRID_SIZE*GRID_SIZE; ++i) {
-        SGrid[i] = *grid++;
-        printf("%d", SGrid[i]);
+        buf[i] = *grid++;
+        printf("%d", buf[i]);
     }
-    SGrid[100] = '\0';
-
-    char_buffer_append(buf,SGrid,101);
+    buf[100] = '\0';
+    printf("\n");
 }
 
 void * process_server_data(void* thread_data){
@@ -188,6 +124,7 @@ void * process_server_data(void* thread_data){
 
     printf("#### PHASE ONE: PLACE YOUR SHIPS !!!\n");
     //loop for placing ships
+
     while (placedShips != NUM_OF_SHIP_CLASSES) {
 
         //copy grid, put ship on temperature grid and grid
@@ -250,29 +187,42 @@ void * process_server_data(void* thread_data){
                 x++;
                 printf("x: %d, y:%d\n", x, y);
                 break;
+            case 'b':
+                active_socket_stop_reading(data->my_socket);
+                break;
         }
         limitCoordinates(ships[placedShips], direction, &x, &y);
         //clear screen
-        system("clear");
+        getchar();
+        //system("clear");
+
     }
 
     pthread_mutex_lock(&data->mutex);
+
     data->serverPlacedShips = TRUE;
+
     pthread_mutex_unlock(&data->mutex);
-    if (!data->clientPlacedShips)  printf("Waiting for Player 2 to place his ships!!\n");
+
+
+    if (!data->clientPlacedShips) {
+        printf("Waiting for Player 2 to place his ships!!\n");
+    }
 
     while(!data->clientPlacedShips){
         //wait for client to place ships
+
     }
 
     printf("#### PHASE TWO: BATTLE !!!\n");
 
     while(!data->gameEnd){
 
+
         printf("Round %d! Your turn ! Choose tile to attack !\n", data->roundCount);
         pthread_mutex_lock(&data->mutex);
 
-        while(data->clientTurn){
+        while(!data->serverTurn){
             //wait for client (player 2) turn to end
             pthread_cond_wait(&data->player1Turn, &data->mutex);
         }
@@ -281,19 +231,50 @@ void * process_server_data(void* thread_data){
         y = GRID_SIZE / 2;
         x = GRID_SIZE / 2;
 
-        memcpy(temp_grid, data->player2->myGrid, GRID_SIZE * GRID_SIZE * sizeof(int));
-        temp_grid[x][y] = target;
-        writeGrid(data->player1->myGrid[0], temp_grid[0]);
 
-        player1Turn(data, x, y);
+        //place a shot
+        while(TRUE){
+            memcpy(temp_grid, data->player2->myGrid, GRID_SIZE * GRID_SIZE * sizeof(int));
+            temp_grid[x][y] = target;
+            writeGrid(data->player1->myGrid[0], temp_grid[0]);
+
+            printf("Place your shot!\n");
+
+            switch (getchar()) {
+                case 'p':
+                    attack(data->player1, data->player2, (short)x, (short)y);
+                    y = GRID_SIZE / 2;
+                    x = GRID_SIZE / 2;
+                    goto end;
+                    break;
+                case 'a':  //up
+                    y--;
+                    if (y < 0) y = 0;
+                    printf("x: %d, y:%d\n", x, y);
+                    break;
+                case 'd':  //down
+                    y++;
+                    if (y >= GRID_SIZE) y = GRID_SIZE - 1;
+                    printf("x: %d, y:%d\n", x, y);
+                    break;
+                case 'w':  //left
+                    x--;
+                    if (x < 0) x = 0;
+                    printf("x: %d, y:%d\n", x, y);
+                    break;
+                case
+                    's':  //right
+                    x++;
+                    if (x >= GRID_SIZE) x = GRID_SIZE - 1;
+                    printf("x: %d, y:%d\n", x, y);
+                    break;
+            }
+        }
+        end:
         //TODO
         //send client grids of both players for display
         //fill buffer with data
-        fillBufferWithGrid(&buf, data->player2->myGrid[0]);
-        active_socket_write_data(data->my_socket, &buf);
 
-        fillBufferWithGrid(&buf, data->player1->myGrid[0]);
-        active_socket_write_data(data->my_socket, &buf);
 
         if (data->player2->lives <= 0){
             printf("Fleet of Player 2 has been destroyed! Game Over!\n");
@@ -308,6 +289,14 @@ void * process_server_data(void* thread_data){
 
         pthread_mutex_unlock(&data->mutex);
 
+
+        printf("Waiting for player 2 to play his round!\n");
+        writeGrid(data->player1->myGrid[0], data->player2->myGrid[0]);
+
+        while (!data->serverTurn){
+
+        }
+
     }
 
 
@@ -315,59 +304,149 @@ void * process_server_data(void* thread_data){
 
     return NULL;
 }
-bool tryDeserializePlacment(struct thread_data * data, struct char_buffer* buf) {
-    char* position = strchr(buf->data, ';');
-    if(position != NULL) {
-        position = strchr(position+1, ';');
-        if(position != NULL){
-            //data protocol shipClass;x1;y1;x2;y2;x3;y3;x4;y4;x5;y5
-            int shipClass,x1,y1,x2,y2,x3,y3,x4,y4,x5,y5;
-            sscanf(buf->data,"%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;",&shipClass,&x1,&y1,&x2,&y2,&x3,&y3,&x4,&y4,&x5,&y5);
-            pthread_mutex_lock(&data->mutex);
-            switch (shipClass) {
-                case carrier:
-                    data->player2->myGrid[x1][y1] = ship;
-                    data->player2->myGrid[x2][y2] = ship;
-                    data->player2->myGrid[x3][y3] = ship;
-                    data->player2->myGrid[x4][y4] = ship;
-                    data->player2->myGrid[x5][y5] = ship;
-                    break;
-                case battleship:
-                    data->player2->myGrid[x1][y1] = ship;
-                    data->player2->myGrid[x2][y2] = ship;
-                    data->player2->myGrid[x3][y3] = ship;
-                    data->player2->myGrid[x4][y4] = ship;
-                    break;
-                case cruiser:
-                    data->player2->myGrid[x1][y1] = ship;
-                    data->player2->myGrid[x2][y2] = ship;
-                    data->player2->myGrid[x3][y3] = ship;
-                    break;
-                case destroyer:
-                    data->player2->myGrid[x1][y1] = ship;
-                    data->player2->myGrid[x2][y2] = ship;
-                    break;
-                case patrol:
-                    data->player2->myGrid[x1][y1] = ship;
-                    break;
-                default:
-                    break;
+bool tryDeserializePlacment(struct thread_data * data, char* buf) {
+    int shipClass, x1, y1, x2, y2, x3, y3, x4, y4, x5, y5;
+    int iter = 0;
 
+
+    shipClass = buf[0];
+    //shipClass = atoi(&buf[0]);
+
+    x1 = buf[2];
+    y1 = buf[4];
+    x2 = buf[6];
+    y2 = buf[8];
+    x3 = buf[10];
+    y3 = buf[12];
+    x4 = buf[14];
+    y4 = buf[16];
+    x5 = buf[18];
+    y5 = buf[20];
+
+    printf("Deserialized data: %s\n", buf);
+    printf("Ship: %d, x1:%d, y1:%d, x2:%d, y2:%d, x3:%d, y3:%d, x4:%d, y4:%d, x5:%d, y5:%d\n", shipClass, x1, y1, x2, y2, x3, y3, x4, y4, x5, y5);
+    pthread_mutex_lock(&data->mutex);
+    switch (shipClass) {
+        case carrier:
+            data->player2->myGrid[y1][x1] = ship;
+            data->player2->myGrid[y2][x2] = ship;
+            data->player2->myGrid[y3][x3] = ship;
+            data->player2->myGrid[y4][x4] = ship;
+            data->player2->myGrid[y5][x5] = ship;
+            break;
+        case battleship:
+            data->player2->myGrid[y1][x1] = ship;
+            data->player2->myGrid[y2][x2] = ship;
+            data->player2->myGrid[y3][x3] = ship;
+            data->player2->myGrid[y4][x4] = ship;
+            break;
+        case cruiser:
+            data->player2->myGrid[y1][x1] = ship;
+            data->player2->myGrid[y2][x2] = ship;
+            data->player2->myGrid[y3][x3] = ship;
+            break;
+        case destroyer:
+            data->player2->myGrid[y1][x1] = ship;
+            data->player2->myGrid[y2][x2] = ship;
+            break;
+        case patrol:
+            data->player2->myGrid[y1][x1] = ship;
+            break;
+        default:
+            break;
+
+    }
+    pthread_mutex_unlock(&data->mutex);
+    return true;
+
+
+
+
+    /*
+    if(pozicia != NULL) {
+        pozicia = strchr(pozicia+1, ';');
+        if(pozicia != NULL){
+            pozicia = strchr(pozicia+1, ';');
+            if(pozicia != NULL){
+                pozicia = strchr(pozicia+1, ';');
+                if(pozicia != NULL){
+                    pozicia = strchr(pozicia+1, ';');
+                    if(pozicia != NULL){
+                        pozicia = strchr(pozicia+1, ';');
+                        if(pozicia != NULL){
+                            pozicia = strchr(pozicia+1, ';');
+                            if(pozicia != NULL){
+                                pozicia = strchr(pozicia+1, ';');
+                                if(pozicia != NULL){
+                                    pozicia = strchr(pozicia+1, ';');
+                                    if(pozicia != NULL){
+                                        pozicia = strchr(pozicia+1, ';');
+                                            if(pozicia != NULL){
+                                                pozicia = strchr(pozicia+1, ';');
+                                                    if(pozicia != NULL) {
+                                                        //data protocol shipClass;x1;y1;x2;y2;x3;y3;x4;y4;x5;y5
+                                                        int shipClass, x1, y1, x2, y2, x3, y3, x4, y4, x5, y5;
+                                                        sscanf(buf, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;", &shipClass, &x1, &y1, &x2, &y2, &x3, &y3, &x4, &y4, &x5, &y5);
+
+                                                        printf("Deserialized data: %s\n", buf);
+                                                        printf("Ship: %d, x1:%d, y1:%d, x2:%d, y2:%d, x3:%d, y3:%d, x4:%d, y4:%d, x5:%d, y5:%d\n", shipClass, x1, y1, x2, y2, x3, y3, x4, y4, x5, y5);
+                                                        pthread_mutex_lock(&data->mutex);
+                                                        switch (shipClass) {
+                                                            case carrier:
+                                                                data->player2->myGrid[x1][y1] = ship;
+                                                                data->player2->myGrid[x2][y2] = ship;
+                                                                data->player2->myGrid[x3][y3] = ship;
+                                                                data->player2->myGrid[x4][y4] = ship;
+                                                                data->player2->myGrid[x5][y5] = ship;
+                                                                break;
+                                                            case battleship:
+                                                                data->player2->myGrid[x1][y1] = ship;
+                                                                data->player2->myGrid[x2][y2] = ship;
+                                                                data->player2->myGrid[x3][y3] = ship;
+                                                                data->player2->myGrid[x4][y4] = ship;
+                                                                break;
+                                                            case cruiser:
+                                                                data->player2->myGrid[x1][y1] = ship;
+                                                                data->player2->myGrid[x2][y2] = ship;
+                                                                data->player2->myGrid[x3][y3] = ship;
+                                                                break;
+                                                            case destroyer:
+                                                                data->player2->myGrid[x1][y1] = ship;
+                                                                data->player2->myGrid[x2][y2] = ship;
+                                                                break;
+                                                            case patrol:
+                                                                data->player2->myGrid[x1][y1] = ship;
+                                                                break;
+                                                            default:
+                                                                break;
+
+                                                        }
+                                                        pthread_mutex_unlock(&data->mutex);
+                                                        printf("Grid after deserialization\n");
+                                                        writeGrid(data->player2->myGrid[0],data->player2->myGrid[0]);
+                                                        return true;
+                                                    }
+                                            }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            pthread_mutex_unlock(&data->mutex);
-            return true;
         }
     }
     return false;
+    */
 }
 
-bool tryDeserializeAttack(struct char_buffer* buf, int * x, int * y) {
-    char* position = strchr(buf->data, ';');
+bool tryDeserializeAttack(char* buf, int * x, int * y) {
+    char* position = strchr(buf, ';');
     if(position != NULL) {
         position = strchr(position+1, ';');
         if(position != NULL){
             //int x,y;
-            sscanf(buf->data, "%d;%d;", x, y);
+            sscanf(buf, "%d;%d;", x, y);
             return true;
         }
     }
@@ -377,28 +456,53 @@ void * process_client_data(void* thread_data){
     struct thread_data * data = thread_data;
     //TODO
     //start reading for placing ships
+    char buffer[150];
     CHAR_BUFFER r_buff;
     char_buffer_init(&r_buff);
 
     int placedShips = 0, x, y;
     while (placedShips != NUM_OF_SHIP_CLASSES) {
+        printf("Trying to read data\n");
+        read(data->my_socket->socket_descriptor, buffer, 100);
 
-        active_socket_try_get_read_data(data->my_socket, &r_buff);
-        if (active_socket_is_end_message(data->my_socket, &r_buff)){
-            active_socket_stop_reading(data->my_socket);
-        } else if (tryDeserializePlacment(data, &r_buff)){
-            //return TRUE;
+        if (tryDeserializePlacment(data, buffer)){
+            printf("PLACEMENT DATA RECIEVED\n");
+            placedShips++;
         } else{
             //wrong message from client
-            active_socket_stop_reading(data->my_socket);
+            //active_socket_stop_reading(data->my_socket);
+            printf("Wrong data from client!\n");
+            break;
         }
-        placedShips++;
     }
 
     //done placing ships
     pthread_mutex_lock(&data->mutex);
     data->clientPlacedShips = TRUE;
     pthread_mutex_unlock(&data->mutex);
+
+    while(!data->serverPlacedShips){
+        //wait for player 1 to place ships
+    }
+    strcpy(buffer, "start");
+    write(data->my_socket->socket_descriptor, buffer, 10);
+    printf("Wrote %s to client\n", buffer);
+    /*
+
+    printf("Waiting for clients message to update\n");
+    read(data->my_socket->socket_descriptor, buffer, 10);
+
+    while(strcmp(buffer, "update") != 0){
+        read(data->my_socket->socket_descriptor, buffer, 10);
+    }
+    printf("Updating client\n");
+    fillBufferWithGrid(buffer, data->player2->myGrid[0]);
+    write(data->my_socket->socket_descriptor, buffer, 150);
+    //active_socket_write_data(data->my_socket, buffer);
+
+    fillBufferWithGrid(buffer, data->player1->myGrid[0]);
+    write(data->my_socket->socket_descriptor, buffer, 150);
+     */
     /*
     if (!data->serverPlacedShips)  printf("Waiting for Player 2 to place his ships!!\n");
 
@@ -414,8 +518,30 @@ void * process_client_data(void* thread_data){
         }
 
         //clients turn
-        data->clientTurn = TRUE;
-        if(tryDeserializeAttack(&r_buff,&x,&y)){
+        data->serverTurn = FALSE;
+
+        strcpy(buffer, "turn");
+        write(data->my_socket->socket_descriptor, buffer, 10);
+        printf("Wrote %s to client\n", buffer);
+
+        printf("Waiting for clients message to update\n");
+        read(data->my_socket->socket_descriptor, buffer, 10);
+
+        while(strcmp(buffer, "update") != 0){
+            read(data->my_socket->socket_descriptor, buffer, 10);
+        }
+        printf("Updating client\n");
+
+        fillBufferWithGrid(buffer, data->player2->myGrid[0]);
+        write(data->my_socket->socket_descriptor, buffer, 150);
+        //active_socket_write_data(data->my_socket, buffer);
+
+        fillBufferWithGrid(buffer, data->player1->myGrid[0]);
+        write(data->my_socket->socket_descriptor, buffer, 150);
+        //active_socket_write_data(data->my_socket, &buf);
+        read(data->my_socket->socket_descriptor, buffer, 10);
+
+        if(tryDeserializeAttack(buffer,&x,&y)){
             //player2Turn(data, x, y);
             attack(data->player2, data->player1, x, y);
         } else{
@@ -430,7 +556,7 @@ void * process_client_data(void* thread_data){
             pthread_mutex_unlock(&data->mutex);
             //active_socket_write_end_message(data->my_socket);
         }
-        data->clientTurn = FALSE;
+        data->serverTurn = TRUE;
 
         pthread_cond_signal(&data->player1Turn);
         pthread_mutex_unlock(&data->mutex);
@@ -455,9 +581,15 @@ int main() {
     pthread_t server;
     pthread_t client;
 
+    PLAYER player1;
+    PLAYER player2;
+
 
     struct active_socket my_socket;
     struct thread_data data;
+
+    data.player1 = &player1;
+    data.player2 = &player2;
 
     active_socket_init(&my_socket);
     thread_data_init(&data,19840, &my_socket);
