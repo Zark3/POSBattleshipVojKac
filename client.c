@@ -213,6 +213,34 @@ void deserializeGrid(struct char_buffer * buffer, int *grid) {
     printf("\r\n");
 }
 
+int determineWinner(int *gridClient, int *gridServer){
+    int shipsClient = 0;
+    int shipsServer = 0;
+    for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+        if(gridServer[i] == ship){shipsServer++;}
+        //printf("%d ",gridServer[i]);
+        if(gridClient[i] == ship){shipsClient++;}
+        //printf("%d\n",gridServer[i]);
+    }
+
+    //printf("Client hp is %d\r\n", shipsClient);
+    //printf("Server hp is %d\r\n", shipsServer);
+
+
+    if (shipsServer == 0) {
+        printf("Fleet of enemy has been destroyed! Game Over!\r\n");
+
+        return clientWinner;
+    }
+
+    if (shipsClient == 0) {
+        printf("Your fleet has been destroyed! Game Over!!\r\n");
+        return serverWinner;
+    }
+
+    else return none;
+}
+
 void * updateGameData(void * gameData) {
     struct thread_data * data = gameData;
 
@@ -240,43 +268,13 @@ void * updateGameData(void * gameData) {
         pthread_cond_signal(&data->play);
         pthread_mutex_unlock(&data->mutex);
 
-        if(data->gameEnd){
+        if(determineWinner(data->clientPlayer.myGrid[0], data->serverPlayer.myGrid[0]) != none){
+        //if(data->gameEnd == true){
             break;
         }
 
     }
-
-
-
     return NULL;
-}
-
-int determineWinner(int *gridClient, int *gridServer){
-    int shipsClient = 0;
-    int shipsServer = 0;
-    for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
-        if(gridServer[i] == ship){shipsServer++;}
-        printf("%d ",gridServer[i]);
-        if(gridClient[i] == ship){shipsClient++;}
-        printf("%d\n",gridServer[i]);
-    }
-
-    //printf("Client hp is %d\r\n", shipsClient);
-    //printf("Server hp is %d\r\n", shipsServer);
-
-
-    if (shipsServer == 0) {
-        printf("Fleet of enemy has been destroyed! Game Over!\r\n");
-
-        return clientWinner;
-    }
-
-    if (shipsClient == 0) {
-        printf("Your fleet has been destroyed! Game Over!!\r\n");
-        return serverWinner;
-    }
-
-    else return none;
 }
 
 void * play(void * gameData){
@@ -492,7 +490,12 @@ void * play(void * gameData){
         pthread_mutex_unlock(&data->mutex);
     }
 
+    pthread_mutex_lock(&data->mutex);
+
     data->gameEnd = true;
+
+    pthread_mutex_unlock(&data->mutex);
+
 
 
 
