@@ -441,16 +441,11 @@ bool tryDeserializePlacment(struct thread_data * data, char* buf) {
 }
 
 bool tryDeserializeAttack(char* buf, int * x, int * y) {
-    char* position = strchr(buf, ';');
-    if(position != NULL) {
-        position = strchr(position+1, ';');
-        if(position != NULL){
-            //int x,y;
-            sscanf(buf, "%d;%d;", x, y);
-            return true;
-        }
-    }
-    return false;
+
+    *x = buf[0];
+    *y = buf[2];
+
+    return true;
 }
 void * process_client_data(void* thread_data){
     struct thread_data * data = thread_data;
@@ -531,11 +526,11 @@ void * process_client_data(void* thread_data){
             read(data->my_socket->socket_descriptor, buffer, 10);
         }
         printf("Updating client\n");
-
+        sleep(1);
         fillBufferWithGrid(buffer, data->player2->myGrid[0]);
         write(data->my_socket->socket_descriptor, buffer, 150);
         //active_socket_write_data(data->my_socket, buffer);
-
+        sleep(1);
         fillBufferWithGrid(buffer, data->player1->myGrid[0]);
         write(data->my_socket->socket_descriptor, buffer, 150);
         //active_socket_write_data(data->my_socket, &buf);
