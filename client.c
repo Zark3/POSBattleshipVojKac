@@ -316,6 +316,9 @@ void * play(void * gameData){
 
 
         printf("Place the %s!\r\n", getShipString(ships[placedShips]));
+        if(data->noShot){
+            printf("Couldn't placed %s! Try again!\r\n", getShipString(ships[placedShips]));
+        }
 
         switch (getchar()) {
             case 'r':
@@ -354,10 +357,13 @@ void * play(void * gameData){
                     serializeShipPlacement(ships[placedShips], shipCoordinates, data->buffer);
                     sendData(data->sck_tcp, data->buffer);
 
+                    data->noShot = false;
                     direction = north;
                     x = GRID_SIZE / 2;
                     y = GRID_SIZE / 2;
                     placedShips++;
+                }else{
+                    data->noShot = true;
                 }
                 break;
             case 'w':  //up

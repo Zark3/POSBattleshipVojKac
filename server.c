@@ -133,6 +133,9 @@ void * process_server_data(void* thread_data){
         writeGrid(temp_grid[0], data->player2->myGrid[0]);
 
         printf("Place the %s!\r\n", getShipString(ships[placedShips]));
+        if(data->noShot){
+            printf("Couldn't placed %s! Try again!\r\n", getShipString(ships[placedShips]));
+        }
 
         switch (getchar()) {
             case 'r':
@@ -164,10 +167,13 @@ void * process_server_data(void* thread_data){
                 if(!tryPutShipInGrid(data->player1->myGrid, ships[placedShips], direction, (short)x, (short)y)){
                     //tryPutShipInGrid(data->player2->myGrid, ships[placedShips], direction, (short)x, (short)y);
                     printf("%s. placed!\r\n", getShipString(ships[placedShips]));
+                    data->noShot = FALSE;
                     placedShips++;
                     direction = north;
                     x = GRID_SIZE / 2;
                     y = GRID_SIZE / 2;
+                } else {
+                    data->noShot = TRUE;
                 }
                 break;
             case 'w':  //up
